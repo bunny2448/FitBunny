@@ -20,12 +20,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- ES Module Shims with shimMode enabled to bypass MIME issues on static hosts -->
+    <!-- ES Module Shims -->
     <script async src="https://ga.jspm.io/npm:es-module-shims@1.10.1/dist/es-module-shims.js" crossorigin="anonymous"></script>
     <script type="esms-options">
     {
-      "shimMode": true,
-      "onerror": "handleShimError"
+      "shimMode": true
     }
     </script>
 
@@ -70,46 +69,53 @@
             overflow: auto;
             font-family: monospace;
         }
-    </style>
-</head>
-<body>
-    <div id="error-overlay">
-        <h1 style="color: #FF4500; font-size: 1.5rem; margin-bottom: 20px;">Launch Error</h1>
-        <div id="error-content" style="background: #F5F5F5; padding: 20px; border-radius: 12px; font-size: 12px; white-space: pre-wrap;"></div>
-        <button onclick="location.reload()" style="margin-top: 20px; padding: 12px 24px; background: #FF4500; color: #FFF; border: none; border-radius: 8px; font-weight: bold;">Retry</button>
-    </div>
-
-    <div id="root">
-        <div style="display: flex; height: 100vh; width: 100vw; align-items: center; justify-content: center; background: #F9F9F9; font-family: sans-serif;">
-            <div style="text-align: center;">
-                <div style="width: 48px; height: 48px; background: #FF4500; border-radius: 16px; margin: 0 auto 24px; animation: bunnyHop 0.6s infinite alternate cubic-bezier(0.2, 0, 0.5, 1);"></div>
-                <div style="font-weight: 900; letter-spacing: -1.5px; color: #1A1A1A; font-size: 1.6rem;">FitBunny</div>
-                <div style="color: #FF4500; font-size: 0.75rem; margin-top: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.7;">Ready in a hop...</div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function handleShimError(err) {
-            console.error('Shim Error:', err);
-            const overlay = document.getElementById('error-overlay');
-            const content = document.getElementById('error-content');
-            overlay.style.display = 'block';
-            content.textContent = err.message || err.toString();
-        }
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            handleShimError(error || msg);
-            return false;
-        };
-    </script>
-
-    <style>
         @keyframes bunnyHop {
             from { transform: translateY(0); }
             to { transform: translateY(-15px); }
         }
     </style>
-    <!-- Use type="module-shim" so es-module-shims handles the load -->
-    <script type="module-shim" src="./index.tsx"></script>
+</head>
+<body>
+    <!-- Error Screen -->
+    <div id="error-overlay">
+        <h1 style="color: #FF4500; font-size: 1.5rem; margin-bottom: 20px; font-weight: 900;">Launch Error</h1>
+        <div id="error-content" style="background: #F5F5F5; padding: 20px; border-radius: 12px; font-size: 12px; white-space: pre-wrap; margin-bottom: 20px; border: 1px solid #EEE;"></div>
+        <button onclick="location.reload()" style="padding: 14px 28px; background: #FF4500; color: #FFF; border: none; border-radius: 12px; font-weight: 900; letter-spacing: 0.5px; cursor: pointer;">Retry Launch</button>
+    </div>
+
+    <div id="root">
+        <div style="display: flex; height: 100vh; width: 100vw; align-items: center; justify-content: center; background: #F9F9F9;">
+            <div style="text-align: center;">
+                <div style="width: 48px; height: 48px; background: #FF4500; border-radius: 16px; margin: 0 auto 24px; animation: bunnyHop 0.6s infinite alternate cubic-bezier(0.2, 0, 0.5, 1);"></div>
+                <div style="font-weight: 900; letter-spacing: -1.5px; color: #1A1A1A; font-size: 1.6rem;">FitBunny</div>
+                <div style="color: #FF4500; font-size: 0.75rem; margin-top: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.7;">Warming up...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.handleShimError = function(err) {
+            console.error('Module Load Error:', err);
+            const overlay = document.getElementById('error-overlay');
+            const content = document.getElementById('error-content');
+            if (overlay && content) {
+                overlay.style.display = 'block';
+                content.textContent = (err && err.message) ? err.message : String(err);
+            }
+        };
+        
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            window.handleShimError(error || msg);
+            return false;
+        };
+
+        // If shimMode: true is used, we listen for specifically shim errors
+        document.addEventListener('esms-error', function(e) {
+            window.handleShimError(e.detail.error);
+        });
+    </script>
+
+    <!-- Entry point: using a simple script with shim handling -->
+    <script type="module-shim" src="index.tsx" crossorigin="anonymous"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'fitbunny-v7';
+const CACHE_NAME = 'fitbunny-v9';
 
 // Assets to cache for offline backup
 const OFFLINE_ASSETS = [
@@ -32,12 +32,48 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network-first strategy for all requests to avoid stale module issues
+  const url = new URL(event.request.url);
+  
+  // Only intercept GET requests
+  if (event.request.method !== 'GET') return;
+
+  // Intercept TSX/TS files to fix potential MIME type issues (mostly for GitHub Pages)
+  if (url.pathname.endsWith('.tsx') || url.pathname.endsWith('.ts')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(async (response) => {
+          if (!response.ok) return response;
+          
+          // Check if we actually need to override (if it's already JS, don't touch it)
+          const contentType = response.headers.get('Content-Type');
+          if (contentType && (contentType.includes('javascript') || contentType.includes('ecmascript'))) {
+            return response;
+          }
+
+          // Force the correct MIME type
+          const newHeaders = new Headers(response.headers);
+          newHeaders.set('Content-Type', 'application/javascript');
+          
+          const blob = await response.blob();
+          return new Response(blob, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: newHeaders
+          });
+        })
+        .catch((err) => {
+          console.error('SW Fetch Error for module:', url.href, err);
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
+
+  // Standard caching strategy for other assets
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Only cache valid GET responses
-        if (response.ok && event.request.method === 'GET') {
+        if (response.ok) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseClone);
@@ -45,9 +81,6 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       })
-      .catch(() => {
-        // Fallback to cache if network fails
-        return caches.match(event.request);
-      })
+      .catch(() => caches.match(event.request))
   );
 });
