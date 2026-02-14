@@ -9,6 +9,79 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
+    <!-- Transpiler for TSX/TS support in browser - MUST load before module shims -->
+    <script src="https://cdn.jsdelivr.net/npm/sucrase@3.35.0/dist/sucrase.min.js"></script>
+    
+    <script>
+        // Set up es-module-shims options IMMEDIATELY to ensure they are available for the loader
+        window.esmsInitOptions = {
+            shimMode: true,
+            fetch: async (url, options) => {
+                const response = await fetch(url, options);
+                if (!response.ok) return response;
+
+                const urlObj = new URL(url, window.location.href);
+                // Robust check for script files based on pathname
+                const isTypeScript = /\.(tsx|ts)$/.test(urlObj.pathname);
+                const isJavaScript = /\.(js|mjs)$/.test(urlObj.pathname);
+                const isLocal = urlObj.origin === window.location.origin;
+
+                // If it's a file we handle or a local script that might have a null MIME type
+                if (isTypeScript || (isLocal && isJavaScript)) {
+                    try {
+                        let content = await response.text();
+                        
+                        // Transpile TypeScript/JSX if necessary
+                        if (isTypeScript) {
+                            if (!window.sucrase) {
+                                throw new Error("Sucrase not found");
+                            }
+                            content = window.sucrase.transform(content, {
+                                transforms: ['typescript', 'jsx'],
+                                production: true,
+                                jsxRuntime: 'classic'
+                            }).code;
+                        }
+                        
+                        // Fix the MIME type for good: explicitly set application/javascript
+                        // This bypasses the server's "null" or "text/plain" headers.
+                        return new Response(content, {
+                            status: response.status,
+                            statusText: response.statusText,
+                            headers: {
+                                ...Object.fromEntries(response.headers.entries()),
+                                'Content-Type': 'application/javascript; charset=utf-8'
+                            }
+                        });
+                    } catch (err) {
+                        console.error('FitBunny Loader Error:', url, err);
+                        // Return an empty valid script to prevent the whole app from hanging
+                        return new Response(`console.error("FitBunny: Error loading ${url}", ${JSON.stringify(err.message)});`, {
+                            headers: { 'Content-Type': 'application/javascript' }
+                        });
+                    }
+                }
+                return response;
+            }
+        };
+    </script>
+
+    <!-- Load the shim after options are set -->
+    <script async src="https://ga.jspm.io/npm:es-module-shims@1.10.1/dist/es-module-shims.js" crossorigin="anonymous"></script>
+
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.475.0?external=react",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
+  }
+}
+</script>
+
     <style>
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -27,6 +100,18 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
+        #loader {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            align-items: center;
+            justify-content: center;
+            background: #F9F9F9;
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            transition: opacity 0.4s ease-out;
+        }
         #error-overlay {
             display: none;
             position: fixed;
@@ -44,12 +129,8 @@
     </style>
 
     <script>
-        // Use the absolute URL constructor to resolve paths reliably
-        const swUrl = new URL('sw.js', window.location.href).href;
-        const entryPoint = new URL('index.tsx', window.location.href).href;
-
-        window.handleShimError = function(err) {
-            console.error('FitBunny Loader Error:', err);
+        window.handleError = function(err) {
+            console.error('FitBunny Load Error:', err);
             const overlay = document.getElementById('error-overlay');
             const content = document.getElementById('error-content');
             if (overlay && content) {
@@ -58,76 +139,35 @@
             }
         };
 
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            window.handleShimError(error || msg);
-            return false;
-        };
+        window.onerror = (msg, url, line, col, error) => window.handleError(error || msg);
+        document.addEventListener('esms-error', (e) => window.handleError(e.detail.error));
 
-        async function startApp() {
+        async function initApp() {
+            // Service Worker registration
             if ('serviceWorker' in navigator) {
                 try {
-                    // Register the SW. The scope defaults to the directory containing the SW script.
-                    const registration = await navigator.serviceWorker.register(swUrl);
-                    
-                    // If the page is not yet controlled by a Service Worker, we must wait for 
-                    // the SW to activate and then reload. This is necessary because the SW 
-                    // only intercepts fetches for pages it controls.
-                    if (!navigator.serviceWorker.controller) {
-                        if (registration.active) {
-                            window.location.reload();
-                            return;
-                        }
-                        
-                        registration.addEventListener('updatefound', () => {
-                            const installingWorker = registration.installing;
-                            installingWorker.addEventListener('statechange', () => {
-                                if (installingWorker.state === 'activated') {
-                                    window.location.reload();
-                                }
-                            });
-                        });
-                        return;
-                    }
-                } catch (err) {
-                    console.warn('Service Worker registration failed:', err);
-                }
+                    const swUrl = './sw.js';
+                    navigator.serviceWorker.register(swUrl).catch(() => {});
+                } catch (e) {}
             }
 
-            // Once the SW is active and controlling the page, it will intercept the fetch
-            // for index.tsx and fix its MIME type.
+            // Launch the app
             const script = document.createElement('script');
             script.type = 'module-shim';
-            script.src = entryPoint;
-            script.onerror = () => window.handleShimError(`Failed to load application at ${entryPoint}`);
+            script.src = './index.tsx';
+            script.onload = () => {
+                const loader = document.getElementById('loader');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 400);
+                }
+            };
+            script.onerror = () => window.handleError(new Error('Entry point (index.tsx) failed to load. Please verify your connection or reload.'));
             document.body.appendChild(script);
         }
 
-        window.addEventListener('load', startApp);
-        
-        document.addEventListener('esms-error', function(e) {
-            window.handleShimError(e.detail.error);
-        });
+        window.addEventListener('load', initApp);
     </script>
-
-    <script async src="https://ga.jspm.io/npm:es-module-shims@1.10.1/dist/es-module-shims.js" crossorigin="anonymous"></script>
-    <script type="esms-options">
-    {
-      "shimMode": true
-    }
-    </script>
-
-    <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@19.0.0",
-    "react-dom": "https://esm.sh/react-dom@19.0.0",
-    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "lucide-react": "https://esm.sh/lucide-react@0.475.0?external=react",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/"
-  }
-}
-</script>
 </head>
 <body>
     <div id="error-overlay">
@@ -136,14 +176,14 @@
         <button onclick="location.reload()" style="padding: 14px 28px; background: #FF4500; color: #FFF; border: none; border-radius: 12px; font-weight: 900; letter-spacing: 0.5px; cursor: pointer;">Retry Loading</button>
     </div>
 
-    <div id="root">
-        <div style="display: flex; height: 100vh; width: 100vw; align-items: center; justify-content: center; background: #F9F9F9;">
-            <div style="text-align: center;">
-                <div style="width: 48px; height: 48px; background: #FF4500; border-radius: 16px; margin: 0 auto 24px; animation: bunnyHop 0.6s infinite alternate cubic-bezier(0.2, 0, 0.5, 1);"></div>
-                <div style="font-weight: 900; letter-spacing: -1.5px; color: #1A1A1A; font-size: 1.6rem;">FitBunny</div>
-                <div style="color: #FF4500; font-size: 0.75rem; margin-top: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.7;">Launching...</div>
-            </div>
+    <div id="loader">
+        <div style="text-align: center;">
+            <div style="width: 48px; height: 48px; background: #FF4500; border-radius: 16px; margin: 0 auto 24px; animation: bunnyHop 0.6s infinite alternate cubic-bezier(0.2, 0, 0.5, 1);"></div>
+            <div style="font-weight: 900; letter-spacing: -1.5px; color: #1A1A1A; font-size: 1.6rem;">FitBunny</div>
+            <div style="color: #FF4500; font-size: 0.75rem; margin-top: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.7;">Warming up...</div>
         </div>
     </div>
+
+    <div id="root"></div>
 </body>
 </html>

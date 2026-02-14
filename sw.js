@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fitbunny-v21';
+const CACHE_NAME = 'fitbunny-v23';
 
 const OFFLINE_ASSETS = [
   './',
@@ -29,37 +29,15 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const isSameOrigin = url.origin === self.location.origin;
-  // Clean the path of query parameters for extension checking
-  const cleanPath = url.pathname.split('?')[0];
-  const isModule = cleanPath.endsWith('.tsx') || cleanPath.endsWith('.ts');
+  
+  // We skip intercepting .tsx and .ts in the Service Worker to let es-module-shims handle them
+  // This avoids double-processing and MIME type mismatch errors in sandboxed environments
+  const isModule = url.pathname.endsWith('.tsx') || url.pathname.endsWith('.ts');
 
-  if (isSameOrigin && isModule) {
-    event.respondWith(
-      fetch(event.request)
-        .then(async (response) => {
-          if (!response || !response.ok) return response;
-
-          // Force the MIME type for JavaScript modules
-          const content = await response.text();
-          const headers = new Headers(response.headers);
-          headers.set('Content-Type', 'application/javascript; charset=utf-8');
-          
-          return new Response(content, {
-            status: response.status,
-            statusText: response.statusText,
-            headers: headers
-          });
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // General fetch strategy: Network first, then cache fallback
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        if (response.ok && isSameOrigin) {
+        if (response.ok && isSameOrigin && !isModule) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
@@ -67,7 +45,6 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(() => caches.match(event.request).then((cached) => {
         if (cached) return cached;
-        // Navigation fallback
         if (event.request.mode === 'navigate') {
           return caches.match('./index.html');
         }
