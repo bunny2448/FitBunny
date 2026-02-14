@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>FitBunny - Energetic Workout Manager</title>
     
-    <!-- PWA / Android Meta Tags -->
+    <!-- PWA Meta Tags -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#FF4500">
     <link rel="manifest" href="manifest.json">
@@ -20,7 +20,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- Support for import maps in all browsers -->
+    <!-- ES Module Shims: The "Shim Mode" bypasses strict MIME type checks -->
     <script async src="https://ga.jspm.io/npm:es-module-shims@1.10.1/dist/es-module-shims.js"></script>
 
     <script type="importmap">
@@ -41,7 +41,6 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #F9F9F9;
             color: #4A4A4A;
-            -webkit-font-smoothing: antialiased;
             margin: 0;
             padding: 0;
             height: 100%;
@@ -61,19 +60,19 @@
     <div id="root">
         <div style="display: flex; height: 100vh; width: 100vw; align-items: center; justify-content: center; background: #F9F9F9; font-family: sans-serif;">
             <div style="text-align: center;">
-                <div style="width: 40px; height: 40px; background: #FF4500; border-radius: 12px; margin: 0 auto 16px; animation: pulse 1.5s infinite ease-in-out;"></div>
-                <div style="font-weight: 900; letter-spacing: -1px; color: #1A1A1A; font-size: 1.2rem;">FitBunny</div>
-                <div style="color: #AAAAAA; font-size: 0.8rem; margin-top: 8px; font-weight: 600;">LOADING ASSETS...</div>
+                <div style="width: 44px; height: 44px; background: #FF4500; border-radius: 14px; margin: 0 auto 20px; animation: bounce 1s infinite alternate ease-in-out;"></div>
+                <div style="font-weight: 900; letter-spacing: -1px; color: #1A1A1A; font-size: 1.4rem;">FitBunny</div>
+                <div style="color: #FF4500; font-size: 0.7rem; margin-top: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">Warming Up...</div>
             </div>
         </div>
     </div>
     <style>
-        @keyframes pulse {
-            0% { transform: scale(0.95); opacity: 0.8; }
-            50% { transform: scale(1.05); opacity: 1; }
-            100% { transform: scale(0.95); opacity: 0.8; }
+        @keyframes bounce {
+            from { transform: translateY(0) scale(1); opacity: 0.9; }
+            to { transform: translateY(-10px) scale(1.05); opacity: 1; }
         }
     </style>
-    <script type="module" src="./index.tsx"></script>
+    <!-- type="module-shim" is the key to fixing the MIME error -->
+    <script type="module-shim" src="./index.tsx"></script>
 </body>
 </html>

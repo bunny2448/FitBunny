@@ -3,13 +3,12 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 
-// Improved Service Worker Registration
+// Service Worker for Offline Access
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const basePath = window.location.pathname.includes('/FitBunny') ? '/FitBunny/' : './';
-    navigator.serviceWorker.register(`${basePath}sw.js`).catch(err => {
-      console.warn('Service Worker registration skipped:', err);
-    });
+    const isSubfolder = window.location.pathname.includes('/FitBunny');
+    const swPath = isSubfolder ? '/FitBunny/sw.js' : './sw.js';
+    navigator.serviceWorker.register(swPath).catch(() => {});
   });
 }
 

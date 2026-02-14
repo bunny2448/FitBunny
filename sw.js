@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'fitbunny-v4';
+const CACHE_NAME = 'fitbunny-v5';
 
 const ASSETS = [
   './',
@@ -8,6 +8,7 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
