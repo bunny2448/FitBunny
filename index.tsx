@@ -3,10 +3,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
-// Register Service Worker for Offline Functionality using a relative path
+// Register Service Worker for Offline Functionality
+// Using ./sw.js is critical for GitHub Pages subfolder hosting
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // Using ./sw.js ensures it works when hosted in a subfolder (like /FitBunny/)
     navigator.serviceWorker.register('./sw.js').catch(err => {
       console.log('SW registration failed: ', err);
     });
