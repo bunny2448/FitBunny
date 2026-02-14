@@ -1,0 +1,29 @@
+
+{
+  "short_name": "FitBunny",
+  "name": "FitBunny Workout Tracker",
+  "description": "High-energy workout tracker with offline-first capabilities.",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2618/2618301.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#FF4500",
+  "background_color": "#F9F9F9",
+  "categories": ["health", "fitness"],
+  "screenshots": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2618/2618301.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "FitBunny Dashboard"
+    }
+  ]
+}
