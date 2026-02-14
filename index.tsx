@@ -3,24 +3,23 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
-// Register Service Worker for Offline Functionality
-// Using ./sw.js is critical for GitHub Pages subfolder hosting
+// Simplified Service Worker Registration for GitHub Pages
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(err => {
-      console.log('SW registration failed: ', err);
+    // Determine the base path (e.g., /FitBunny/)
+    const basePath = window.location.pathname.includes('/FitBunny') ? '/FitBunny/' : './';
+    navigator.serviceWorker.register(`${basePath}sw.js`).catch(err => {
+      console.warn('Service Worker registration skipped or failed:', err);
     });
   });
 }
 
 const rootElement = document.getElementById('root');
-if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
+if (rootElement) {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
 }
-
-const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);

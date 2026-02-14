@@ -4,9 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="refresh" content="0; URL='./index.html'">
-    <title>Redirecting...</title>
+    <title>FitBunny - Redirecting</title>
 </head>
 <body>
-    Redirecting to FitBunny...
+    <script>
+        // If we are in a subfolder, redirect to that subfolder's index
+        const path = window.location.pathname;
+        if (path.includes('/FitBunny')) {
+            window.location.href = '/FitBunny/index.html';
+        } else {
+            window.location.href = '/index.html';
+        }
+    </script>
 </body>
 </html>
