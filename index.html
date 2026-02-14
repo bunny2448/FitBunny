@@ -20,8 +20,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- ES Module Shims: The "Shim Mode" bypasses strict MIME type checks -->
-    <script async src="https://ga.jspm.io/npm:es-module-shims@1.10.1/dist/es-module-shims.js"></script>
+    <!-- ES Module Shims with shimMode enabled to bypass MIME issues on static hosts -->
+    <script async src="https://ga.jspm.io/npm:es-module-shims@1.10.1/dist/es-module-shims.js" crossorigin="anonymous"></script>
+    <script type="esms-options">
+    {
+      "shimMode": true,
+      "onerror": "handleShimError"
+    }
+    </script>
 
     <script type="importmap">
 {
@@ -54,25 +60,56 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
+        #error-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #FFF;
+            z-index: 9999;
+            padding: 40px;
+            overflow: auto;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
+    <div id="error-overlay">
+        <h1 style="color: #FF4500; font-size: 1.5rem; margin-bottom: 20px;">Launch Error</h1>
+        <div id="error-content" style="background: #F5F5F5; padding: 20px; border-radius: 12px; font-size: 12px; white-space: pre-wrap;"></div>
+        <button onclick="location.reload()" style="margin-top: 20px; padding: 12px 24px; background: #FF4500; color: #FFF; border: none; border-radius: 8px; font-weight: bold;">Retry</button>
+    </div>
+
     <div id="root">
         <div style="display: flex; height: 100vh; width: 100vw; align-items: center; justify-content: center; background: #F9F9F9; font-family: sans-serif;">
             <div style="text-align: center;">
-                <div style="width: 44px; height: 44px; background: #FF4500; border-radius: 14px; margin: 0 auto 20px; animation: bounce 1s infinite alternate ease-in-out;"></div>
-                <div style="font-weight: 900; letter-spacing: -1px; color: #1A1A1A; font-size: 1.4rem;">FitBunny</div>
-                <div style="color: #FF4500; font-size: 0.7rem; margin-top: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">Warming Up...</div>
+                <div style="width: 48px; height: 48px; background: #FF4500; border-radius: 16px; margin: 0 auto 24px; animation: bunnyHop 0.6s infinite alternate cubic-bezier(0.2, 0, 0.5, 1);"></div>
+                <div style="font-weight: 900; letter-spacing: -1.5px; color: #1A1A1A; font-size: 1.6rem;">FitBunny</div>
+                <div style="color: #FF4500; font-size: 0.75rem; margin-top: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.7;">Ready in a hop...</div>
             </div>
         </div>
     </div>
+
+    <script>
+        function handleShimError(err) {
+            console.error('Shim Error:', err);
+            const overlay = document.getElementById('error-overlay');
+            const content = document.getElementById('error-content');
+            overlay.style.display = 'block';
+            content.textContent = err.message || err.toString();
+        }
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            handleShimError(error || msg);
+            return false;
+        };
+    </script>
+
     <style>
-        @keyframes bounce {
-            from { transform: translateY(0) scale(1); opacity: 0.9; }
-            to { transform: translateY(-10px) scale(1.05); opacity: 1; }
+        @keyframes bunnyHop {
+            from { transform: translateY(0); }
+            to { transform: translateY(-15px); }
         }
     </style>
-    <!-- type="module-shim" is the key to fixing the MIME error -->
+    <!-- Use type="module-shim" so es-module-shims handles the load -->
     <script type="module-shim" src="./index.tsx"></script>
 </body>
 </html>
