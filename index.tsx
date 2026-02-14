@@ -1,15 +1,14 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+import App from './App.tsx';
 
-// Simplified Service Worker Registration for GitHub Pages
+// Improved Service Worker Registration
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // Determine the base path (e.g., /FitBunny/)
     const basePath = window.location.pathname.includes('/FitBunny') ? '/FitBunny/' : './';
     navigator.serviceWorker.register(`${basePath}sw.js`).catch(err => {
-      console.warn('Service Worker registration skipped or failed:', err);
+      console.warn('Service Worker registration skipped:', err);
     });
   });
 }

@@ -1,8 +1,8 @@
 
 import React, { useState, useRef } from 'react';
 import { X, Camera, Check, Video, Trash2 } from 'lucide-react';
-import { Exercise, ExerciseType } from '../types';
-import { videoDb } from '../utils/videoDb';
+import { Exercise, ExerciseType } from '../types.ts';
+import { videoDb } from '../utils/videoDb.ts';
 
 interface ExerciseFormProps {
   onClose: () => void;
@@ -31,7 +31,6 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onClose, onSubmit })
     e.preventDefault();
     if (!formData.name.trim()) return;
 
-    // We generate the ID here to use it for the video storage
     const tempId = crypto.randomUUID();
     
     if (selectedFile) {
@@ -44,8 +43,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onClose, onSubmit })
 
     const success = onSubmit({ 
       ...formData, 
-      id: tempId // We pass the ID explicitly to the handler if needed, but our App.tsx generates one.
-      // Let's modify App.tsx as well or ensure we use the same ID.
+      id: tempId
     } as any);
 
     if (success) onClose();

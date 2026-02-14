@@ -1,7 +1,6 @@
 
-const CACHE_NAME = 'fitbunny-v3';
+const CACHE_NAME = 'fitbunny-v4';
 
-// We fetch relative to the SW location
 const ASSETS = [
   './',
   './index.html',

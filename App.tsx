@@ -1,19 +1,19 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Plus, Trash2, Rabbit, Calendar as CalendarIcon, CheckCircle2, List, History as HistoryIcon, Dumbbell } from 'lucide-react';
-import { Exercise, WorkoutTemplate, ScheduledWorkout, WorkoutLog } from './types';
-import { ExercisesView } from './components/ExercisesView';
-import { Tier1ImportModal } from './components/Tier1ImportModal';
-import { ExerciseForm } from './components/ExerciseForm';
-import { CalendarView } from './components/CalendarView';
-import { Tier2ImportModal } from './components/Tier2ImportModal';
-import { Tier3ImportModal } from './components/Tier3ImportModal';
-import { ManualAssignModal } from './components/ManualAssignModal';
-import { ActiveWorkoutScreen } from './components/ActiveWorkoutScreen';
-import { WorkoutTemplatesView } from './components/WorkoutTemplatesView';
-import { WorkoutTemplateForm } from './components/WorkoutTemplateForm';
-import { HistoryView } from './components/HistoryView';
-import { videoDb } from './utils/videoDb';
+import { Exercise, WorkoutTemplate, ScheduledWorkout, WorkoutLog } from './types.ts';
+import { ExercisesView } from './components/ExercisesView.tsx';
+import { Tier1ImportModal } from './components/Tier1ImportModal.tsx';
+import { ExerciseForm } from './components/ExerciseForm.tsx';
+import { CalendarView } from './components/CalendarView.tsx';
+import { Tier2ImportModal } from './components/Tier2ImportModal.tsx';
+import { Tier3ImportModal } from './components/Tier3ImportModal.tsx';
+import { ManualAssignModal } from './components/ManualAssignModal.tsx';
+import { ActiveWorkoutScreen } from './components/ActiveWorkoutScreen.tsx';
+import { WorkoutTemplatesView } from './components/WorkoutTemplatesView.tsx';
+import { WorkoutTemplateForm } from './components/WorkoutTemplateForm.tsx';
+import { HistoryView } from './components/HistoryView.tsx';
+import { videoDb } from './utils/videoDb.ts';
 
 const STORAGE_KEYS = {
   EXERCISES: 'fitbunny_v2_exercises',
@@ -71,7 +71,6 @@ const App: React.FC = () => {
     setTimeout(() => setNotification(null), 3000);
   };
 
-  // Tier 1 Handlers
   const handleAddExercise = (newEx: Exercise) => {
     setExercises(prev => [...prev, newEx]);
     showNotification(`Added ${newEx.name}`, 'success');
@@ -84,7 +83,6 @@ const App: React.FC = () => {
     showNotification('Exercise removed.', 'success');
   };
 
-  // Tier 2 Handlers
   const handleAddTemplate = (template: WorkoutTemplate) => {
     setTemplates(prev => [...prev, template]);
     showNotification(`Routine "${template.name}" created.`, 'success');
@@ -96,7 +94,6 @@ const App: React.FC = () => {
     showNotification('Template deleted.', 'success');
   };
 
-  // Tier 3 Handlers
   const handleAddSchedule = (entry: ScheduledWorkout) => {
     setSchedule(prev => [...prev, entry]);
     showNotification('Workout scheduled.', 'success');
@@ -225,7 +222,6 @@ const App: React.FC = () => {
         </div>
       </footer>
 
-      {/* Modals */}
       {isTier1ImportOpen && <Tier1ImportModal onClose={() => setIsTier1ImportOpen(false)} onImport={(exs) => { exs.forEach(handleAddExercise); setIsTier1ImportOpen(false); }} />}
       {isTier2ImportOpen && <Tier2ImportModal exercises={exercises} onClose={() => setIsTier2ImportOpen(false)} onImport={(ts) => { ts.forEach(handleAddTemplate); setIsTier2ImportOpen(false); }} />}
       {isTier3ImportOpen && <Tier3ImportModal templates={templates} onClose={() => setIsTier3ImportOpen(false)} onImport={(schs) => { schs.forEach(handleAddSchedule); setIsTier3ImportOpen(false); }} />}
